@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 np.random.seed(1)
 tf.random.set_seed(1)
 
+# MLP 모델 생성/ 2개의 은닉층, 출력층으로 구성
 def create_deep_model(neurons, input_shape, num_classes):
     model = Sequential([
         Dense(neurons, input_shape=(input_shape,), activation='relu'),
@@ -26,14 +27,15 @@ def create_deep_model(neurons, input_shape, num_classes):
         Dense(num_classes, activation='softmax')
     ])
 
-    # Compile the model
+    # 모델 컴파일
     model.compile(optimizer='adam',
                   loss='categorical_crossentropy',
                   metrics=['accuracy'])
     return model
 
+# 모델 학습
 def learn_model(train_images, train_classes, test_images, test_classes):
-    # model 학습 향상 및 속도를 위한 정규화 (0~1)
+    # model 학습 속도 및 성능 향상을 위한 이미지 정규화 (0~1)
     train_images = train_images.reshape((train_images.shape[0], 784)).astype('float32') / 255
     test_images = test_images.reshape((test_images.shape[0], 784)).astype('float32') / 255
 
@@ -41,10 +43,7 @@ def learn_model(train_images, train_classes, test_images, test_classes):
     train = to_categorical(train_classes, num_classes)
     test = to_categorical(test_classes, num_classes)
 
-    # 뉴런 수를 다르게 설정하여 모델 학습
     neuron_options = [512]
-
-    # Dictionary to store histories for plotting
     histories = {}
 
     for neurons in neuron_options:
@@ -61,12 +60,11 @@ def learn_model(train_images, train_classes, test_images, test_classes):
         checkpoint = ModelCheckpoint(filepath, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max', save_weights_only=False)
 
         history = model.fit(train_images, train,
-                            batch_size=128,
-                            epochs=10,
+                            batch_size=256,
+                            epochs=50,
                             validation_data=(test_images, test),
                             callbacks=[early_stopping, lr_scheduler, checkpoint])
 
-        # Save the history for plotting
         histories[neurons] = history.history
 
         # 모델 평가
@@ -85,7 +83,7 @@ def learn_model(train_images, train_classes, test_images, test_classes):
     return histories, neuron_options, test_images, test_classes
 
 def plot_results(histories, neuron_options):
-    # Plot the training and validation loss for each configuration of neurons
+
     plt.figure(figsize=(15, 10))
 
     for i, neurons in enumerate(neuron_options):
@@ -98,14 +96,14 @@ def plot_results(histories, neuron_options):
         plt.legend()
 
     plt.tight_layout()
-    plt.savefig('img/test/training_validation_loss.png')  # Save the plot as an image
-    plt.close()  # Close the plot to free up memory
+    plt.savefig('img/test/training_validation_loss.png')
+    plt.close()
 
 def plot_predictions(model, test_images, test_classes):
-    # Define class names
+
+    # Fashion MNIST 카테고리
     CLASSES = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
 
-    # Function to plot an image
     def plot_image(i, predictions_array, true_label, img):
         predictions_array, true_label, img = predictions_array[i], true_label[i], img[i].reshape(28, 28)
         plt.grid(False)
@@ -125,7 +123,6 @@ def plot_predictions(model, test_images, test_classes):
                                              CLASSES[true_label]),
                    color=color)
 
-    # Function to plot the value array
     def plot_value_array(i, predictions_array, true_label):
         predictions_array, true_label = predictions_array[i], true_label[i]
         plt.grid(False)
@@ -138,8 +135,6 @@ def plot_predictions(model, test_images, test_classes):
         thisplot[predicted_label].set_color('red')
         thisplot[true_label].set_color('blue')
 
-    # Example usage
-    # Assuming predictions is a variable that contains the model's predictions for the test set
     predictions = model.predict(test_images.reshape(-1, 784))
 
     num_rows = 5
@@ -151,19 +146,17 @@ def plot_predictions(model, test_images, test_classes):
         plot_image(i, predictions, test_classes, test_images)
         plt.subplot(num_rows, 2 * num_cols, 2 * i + 2)
         plot_value_array(i, predictions, test_classes)
-    plt.savefig('img/test/predictions.png')  # Save the plot as an image
-    plt.close()  # Close the plot to free up memory
+    plt.savefig('img/test/predictions.png')
+    plt.close()
 
 def learning():
-    # Set random seeds for reproducibility
+    # 프로젝트의 재현성을 위해 랜덤 시드 설정
     np.random.seed(1)
     tf.random.set_seed(1)
 
     # 카테고리 분류
     CLASSES = {0: "T-shirt/top", 1: "Trouser", 2: "Pullover", 3: "Dress", 4: "Coat", 5: "Sandal", 6: "Shirt", 7: "Sneaker", 8: "Bag", 9: "Ankle boot"}
 
-    # fashion mnist setting
-    # image size: 28x28
     (train_images, train_classes), (test_images, test_classes) = fashion_mnist.load_data()
 
     # 데이터를 학습용과 검증용으로 분할

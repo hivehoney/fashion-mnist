@@ -8,28 +8,22 @@ import matplotlib.pyplot as plt
 model_path = 'fashion_mnist_mlp.h5'
 model = load_model(model_path)
 
-# Fashion MNIST 클래스 라벨
+# Fashion MNIST 카테고리
 class_labels_dict = {0: "T-shirt/top", 1: "Trouser", 2: "Pullover", 3: "Dress", 4: "Coat", 5: "Sandal", 6: "Shirt", 7: "Sneaker", 8: "Bag", 9: "Ankle boot"}
 
 # 이미지 전처리 함수 (색상 반전 포함)
 def preprocess_image(img_path):
-    # Load image and convert to grayscale
+
     img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
     if img is None:
         raise ValueError(f"이미지를 로드할 수 없습니다: {img_path}")
 
-    # Resize image
     img_resized = cv2.resize(img, (28, 28))
-
-    # Invert colors
     img_inverted = cv2.bitwise_not(img_resized)
 
-    # Enhance the contrast to ensure the object is clearly visible
-    alpha = 3.0  # Simple contrast control
-    beta = 5  # Simple brightness control
+    alpha = 3.0
+    beta = 5
     img_contrast = cv2.convertScaleAbs(img_inverted, alpha=alpha, beta=beta)
-
-    # Convert the image to fit the model input format
     img_processed = img_contrast.reshape(1, 784).astype('float32') / 255
 
     return img_processed
